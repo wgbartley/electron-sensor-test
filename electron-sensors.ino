@@ -2,19 +2,15 @@
 #include "elapsedMillis.h"
 #include "PietteTech_DHT.h"
 #include "thermistor-library.h"
-
-// #include "pmic.h"
-// #include "fuelgauge.h"
 #include "PietteTech_DHT.h"
-// #include "tsl2561.h"
+
+#define SLEEP_DURATION 9*60 // Sleep for 9 minutes
 
 PMIC PMIC;
 FuelGauge fuel;
 
 double fuelSOC = 0;
 double fuelVcell = 0;
-
-// TSL2561 tsl(TSL2561_ADDR);
 
 elapsedMillis dht_timer;
 elapsedMillis pub_timer;
@@ -45,6 +41,11 @@ Thermistor Thermistor(A0, 10000);
 
 
 void setup() {
+    // https://gist.github.com/brandoaire/68d639903d4984c3bd7c
+    PMIC.begin();
+    PMIC.disableWatchdog();
+    PMIC.setInputCurrentLimit(500);
+
     Serial.begin(115200);
     Thermistor.begin();
 
@@ -59,6 +60,8 @@ void setup() {
 
 
 void loop() {
+    PMIC.setInputCurrentLimit(500);
+
 	doDHT22();
 	doFuel();
 	doThermistor();
@@ -153,6 +156,9 @@ void doPub() {
     	//Particle.publish("statsd", pub, 60);
 
     	pub_timer = 0;
+    	
+    	
+    	System.sleep(SLEEP_MODE_DEEP, SLEEP_DURATION); // Sleep!
 	}
 }
 
